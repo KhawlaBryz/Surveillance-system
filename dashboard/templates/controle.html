@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contrôle</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+
+        <!-- Navbar -->
+    <div class="container-fluid">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            
+            <form class="form-inline ml-auto w-50">
+                <input class="form-control mr-sm-2 w-100" type="search" placeholder="Recherche" aria-label="Recherche">
+            </form>
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="#" data-toggle="modal" data-target="#notificationsModal"  id="notificationIcon">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge badge-pill badge-danger"></span> <!-- Nombre de notifications -->
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="#"><i class="fas fa-cog"></i></a>
+                </li>
+            </ul>
+        </div> 
+    </div>
+</nav>
+<!-- End Navbar -->
+<div class="row">
+    <div class="col-md-2 bg-dark sidebar full-height-sidebar">
+        <div class="pt-4">
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="/"><i class="fas fa-home"></i>  Accueil</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="/historique"><i class="fas fa-history"></i> Historique</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white" href="/controle"><i class="fas fa-cogs"></i> Contrôle</a>
+                </li>
+                <li class="navbar-nav mr-auto">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">{{ current_user.username }}</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+                        </li>
+                    {% endif %}
+                </li>
+            </ul>
+        </div>
+    </div>
+            <div class="col-md-10">
+                <div class="card-group">
+
+                    
+                    <div class="card mt-4">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-bell"></i> État de l'alarme</h5>
+                            {% if temperature > 30 %}
+                                <i class="fas fa-bell fa-4x text-danger"></i>  Active 
+                            {% else %}
+                                <i class="fas fa-bell fa-4x text-secondary"></i> Désactivée 
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="card mt-4">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-lightbulb"></i> État de la LED</h5>
+                            {% if luminosity < 15 %}
+                                <i class="fas fa-lightbulb fa-4x text-warning"></i> Allumée 
+                            {% else %}
+                                <i class="fas fa-lightbulb fa-4x text-secondary"></i>  Éteinte
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="card-group">
+                    <div class="card mt-4">
+                        <div class="card-body">
+                            <canvas id="temperatureChart" width="10" height="10"></canvas>
+                        </div>
+                    </div>
+                    <div class="card mt-4">
+                        <div class="card-body">
+                            <canvas id="luminosityChart" width="50" height="50"></canvas>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Modal -->
+<div class="modal fade" id="notificationsModal" tabindex="-1" aria-labelledby="notificationsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="notificationsModalLabel">Notifications</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- Contenu des notifications -->
+                <ul id="notificationList" class="list-group">
+                        <li class="list-group-item">{{ notifications }}</li>
+
+                   
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+               
+
+ 
+ 
+
+    <script>
+        const temperature = {{ temperature | safe }};
+        const luminosity = {{ luminosity | safe }};
+
+        // Configuration du graphique pour la température
+        const temperatureChart = new Chart(document.getElementById('temperatureChart').getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Température'],
+                datasets: [{
+                    data: [temperature, 100 - temperature],
+                    backgroundColor: ['rgba(255, 99, 132, 1)', 'rgba(192, 192, 192, 1)'],
+                    borderWidth: 1
+                }]
+            }
+        });
+
+        // Configuration du graphique pour la luminosité
+        const luminosityChart = new Chart(document.getElementById('luminosityChart').getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Luminosité'],
+                datasets: [{
+                    data: [luminosity, 100 - luminosity],
+                    backgroundColor: ['rgba(54, 162, 235, 1)', 'rgba(192, 192, 192, 1)'],
+                    borderWidth: 1
+                }]
+            }
+        });
+        // Cette fonction est appelée pour mettre à jour le nombre de notifications affiché
+function updateNotificationCount() {
+    // Récupérer les notifications du modèle
+    var notifications = {{ notifications | tojson }};
+    
+    // Obtenir la longueur de la liste des notifications
+    var count = notifications.length;
+
+    // Mettre à jour le contenu de la balise span avec l'ID "notificationCount"
+    document.getElementById('notificationCount').textContent = count;
+}
+
+// Appeler la fonction lors du chargement de la page pour afficher le nombre initial de notifications
+document.addEventListener('DOMContentLoaded', function() {
+    updateNotificationCount();
+});
+
+  // Récupération des données de notifications depuis Flask
+  const notifications = {{ notifications | tojson }};
+    
+  // Mettre à jour le nombre de notifications affiché sur l'icône
+  function updateNotificationCount() {
+      const badgeElement = document.querySelector('.badge.badge-pill.badge-danger');
+
+      // Vérifier s'il y a des notifications
+      if (notifications.length > 0) {
+          badgeElement.textContent = '1'; // Afficher "1" pour indiquer des notifications
+      } else {
+          badgeElement.textContent = ''; // Sinon, ne pas afficher de badge
+      }
+  }
+   // Appel de la fonction pour mettre à jour le badge lors du chargement de la page
+   document.addEventListener('DOMContentLoaded', function() {
+    updateNotificationCount();
+
+    // Gestionnaire d'événements pour supprimer le badge lors du clic sur l'icône de notification
+    document.getElementById('notificationIcon').addEventListener('click', function() {
+        const badgeElement = document.querySelector('.badge.badge-pill.badge-danger');
+        badgeElement.textContent = ''; // Effacer le badge lors du clic sur l'icône de notification
+    });
+});
+function refreshPage() {
+    setTimeout(function() {
+        location.reload();
+    },  5000); // Recharge la page toutes les 2 secondes (2000 ms)
+}
+
+window.onload = function() {
+    refreshPage();
+}; 
+
+    </script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <!-- Les liens vers les bibliothèques JavaScript nécessaires -->
+  <script src="https://kit.fontawesome.com/a076d05399.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-notify/0.2.0/js/bootstrap-notify.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-notify/0.2.0/js/bootstrap-notify.min.js"></script>
+
+</body>
+</html>
