@@ -102,9 +102,9 @@ void setup() {
   pinMode(BUZZER_PIN, OUTPUT);
 
   // Create and start FreeRTOS tasks
-  xTaskCreate(TaskReadTemp, "Read Temp Task", 128, NULL, 1, NULL);
-  xTaskCreate(TaskReadLight, "Read Light Task", 128, NULL, 1, NULL);
-  xTaskCreate(TaskDisplay, "Display Task", 128, NULL, 2, NULL);
+  xTaskCreate(TaskReadTemp, "Read Temp Task", 128, NULL, 2, NULL);
+  xTaskCreate(TaskReadLight, "Read Light Task", 128, NULL, 2, NULL);
+  xTaskCreate(TaskDisplay, "Display Task", 128, NULL, 1, NULL);
 
   vTaskStartScheduler();
 }
